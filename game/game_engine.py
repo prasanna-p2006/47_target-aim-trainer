@@ -46,6 +46,11 @@ class GameEngine:
         self.game_over = False
         self.should_exit = False
 
+        self.hit_sound = pygame.mixer.Sound("sounds/hit.wav")
+        self.miss_sound = pygame.mixer.Sound("sounds/miss.wav")
+        self.timeout_sound = pygame.mixer.Sound("sounds/timeout.wav")
+        self.game_over_sound = pygame.mixer.Sound("sounds/game_over.wav")
+
         self._start_new_game()
 
     def _spawn_target(self):
@@ -102,9 +107,11 @@ class GameEngine:
         if self.target.contains_point(x, y):
             self.hits += 1
             self.score += 1
+            self.hit_sound.play()
             self.target = self._spawn_target()
         else:
             self.misses += 1
+            self.miss_sound.play()
 
     def handle_input(self):
         # Reserved for continuously-held-key input; this game is
@@ -119,12 +126,14 @@ class GameEngine:
 
         if self.time_left_frames <= 0:
             self.game_over = True
+            self.game_over_sound.play()
             return
 
         self.target.update()
 
         if self.target.expired():
             self.misses += 1
+            self.timeout_sound.play()
             self.target = self._spawn_target()
 
     def accuracy(self):
