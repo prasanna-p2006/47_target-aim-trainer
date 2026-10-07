@@ -1,3 +1,4 @@
+
 import pygame
 from game.game_engine import GameEngine
 
@@ -23,10 +24,15 @@ def main():
     running = True
     while running:
         SCREEN.fill(DARK_GRAY)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             engine.handle_event(event)
+
+        if engine.should_exit:
+            running = False
 
         engine.handle_input()
         engine.update()

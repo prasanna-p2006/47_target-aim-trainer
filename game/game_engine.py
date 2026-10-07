@@ -1,3 +1,4 @@
+
 import pygame
 import random
 from .target import Target
@@ -24,6 +25,7 @@ class GameEngine:
         self.score = 0
         self.font = pygame.font.SysFont("Arial", 26)
         self.game_over = False
+        self.should_exit = False
 
     def _spawn_target(self):
         x = random.randint(self.margin, self.width - self.margin)
@@ -32,7 +34,10 @@ class GameEngine:
 
     def handle_event(self, event):
         if self.game_over:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                self.should_exit = True
             return
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             self._handle_click(event.pos)
 
@@ -61,7 +66,7 @@ class GameEngine:
 
         self.target.update()
         if self.target.expired():
-            self.misses += 1  # letting a target time out counts as a miss too
+            self.misses += 1
             self.target = self._spawn_target()
 
     def accuracy(self):
@@ -71,6 +76,48 @@ class GameEngine:
         return round(100 * self.hits / total, 1)
 
     def render(self, screen):
+        if self.game_over:
+            game_over_text = self.font.render("GAME OVER", True, WHITE)
+            score_text = self.font.render(
+                f"Final Score: {self.score}", True, WHITE
+            )
+            accuracy_text = self.font.render(
+                f"Final Accuracy: {self.accuracy()}%", True, WHITE
+            )
+            instruction_text = self.font.render(
+                "Press ENTER to exit", True, WHITE
+            )
+
+            screen.blit(
+                game_over_text,
+                (
+                    self.width // 2 - game_over_text.get_width() // 2,
+                    120
+                )
+            )
+            screen.blit(
+                score_text,
+                (
+                    self.width // 2 - score_text.get_width() // 2,
+                    190
+                )
+            )
+            screen.blit(
+                accuracy_text,
+                (
+                    self.width // 2 - accuracy_text.get_width() // 2,
+                    240
+                )
+            )
+            screen.blit(
+                instruction_text,
+                (
+                    self.width // 2 - instruction_text.get_width() // 2,
+                    320
+                )
+            )
+            return
+
         r = int(self.target.visual_radius())
         pygame.draw.circle(screen, RED, (self.target.x, self.target.y), r)
         pygame.draw.circle(screen, WHITE, (self.target.x, self.target.y), r, 2)
@@ -85,7 +132,3 @@ class GameEngine:
         acc_text = self.font.render(f"Accuracy: {self.accuracy()}%", True, WHITE)
         screen.blit(acc_text, (self.width // 2 - 90, 10))
 
-        if self.game_over and not getattr(self, "_game_over_logged", False):
-            # NOTE: no proper game-over screen yet - see Task 2 in the README.
-            print(f"Time's up! Final score: {self.score}  Accuracy: {self.accuracy()}%")
-            self._game_over_logged = True
